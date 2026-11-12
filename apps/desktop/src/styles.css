@@ -154,11 +154,12 @@ textarea {
 .brand-mark {
   width: 28px;
   height: 28px;
-  border-radius: 9px;
-  display: grid;
-  place-items: center;
-  background: var(--ink);
-  color: var(--on-ink);
+  border-radius: 8px;
+  overflow: hidden;
+  flex: none;
+}
+.brand-mark svg {
+  display: block;
 }
 .brand-name {
   font: 600 14px var(--font-display);

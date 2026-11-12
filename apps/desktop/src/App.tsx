@@ -7,7 +7,7 @@ import { InstallPage } from './pages/InstallPage';
 import { InstalledPage } from './pages/InstalledPage';
 import { HealthPage } from './pages/HealthPage';
 import { EditorPage, type EditTarget } from './pages/EditorPage';
-import { IconGrid, IconInstall, IconPulse } from './icons';
+import { IconGrid, IconInstall, IconPulse, LogoMark } from './icons';
 
 type Page = 'install' | 'installed' | 'health';
 
@@ -92,7 +92,7 @@ export default function App() {
       <aside className="sidebar" data-tauri-drag-region>
         <div className="brand" data-tauri-drag-region>
           <div className="brand-mark">
-            <IconInstall size={16} />
+            <LogoMark size={28} />
           </div>
           <span className="brand-name">{t('app.name')}</span>
         </div>

@@ -201,3 +201,15 @@ export const IconLink = (p: P) => (
     <path d="M14 10a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1" />
   </Svg>
 );
+
+// The Cradler logo, same geometry as the app icon (logo space 0–256).
+// The container clips it to a rounded square.
+export const LogoMark = ({ size = 28 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 256 256" aria-hidden="true">
+    <rect width="256" height="256" fill="#FF6A36" />
+    <path d="M42 116.5 158.5 0H256V256H157.5L42 140.5Z" fill="#FFCB36" />
+    <rect x="56.25" y="56.25" width="143.5" height="143.5" rx="28" fill="#fff" transform="rotate(45 128 128)" />
+    <rect x="97" y="98" width="22" height="30" rx="11" fill="#FF6A36" />
+    <rect x="137" y="90" width="22" height="29" rx="11" fill="#FF6A36" />
+  </svg>
+);
