@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CLIENTS, loadInventory, t, type ClientId, type Inventory, type RepairKind } from '@cradle/core';
+import { CLIENTS, loadInventory, t, type ClientId, type Inventory, type RepairKind } from '@cradler-desktop/core';
 import { detectClients, inTauri } from './clients';
 import { nativeIO } from './native';
 import { useHealth, worst } from './health';

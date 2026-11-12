@@ -9,7 +9,7 @@ import {
   type Inventory,
   type RepairKind,
   type ServerGroup,
-} from '@cradle/core';
+} from '@cradler-desktop/core';
 import { worst, type HealthState } from '../health';
 import { openExternal } from '../clients';
 import { reveal, shortPath } from '../native';

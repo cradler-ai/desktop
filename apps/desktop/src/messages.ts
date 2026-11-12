@@ -1,7 +1,7 @@
-import { registerMessages } from '@cradle/core';
+import { registerMessages } from '@cradler-desktop/core';
 
 registerMessages('zh', {
-  'app.name': 'Cradle',
+  'app.name': 'Cradler Desktop',
   'nav.install': '安装',
   'nav.installed': '已安装',
   'nav.health': '体检',
@@ -233,7 +233,7 @@ registerMessages('zh', {
 });
 
 registerMessages('en', {
-  'app.name': 'Cradle',
+  'app.name': 'Cradler Desktop',
   'nav.install': 'Install',
   'nav.installed': 'Installed',
   'nav.health': 'Health check',

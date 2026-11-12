@@ -22,7 +22,7 @@ import {
   type RawServerConfig,
   t,
   clientLabel,
-} from '@cradle/core';
+} from '@cradler-desktop/core';
 import { nativeError, nativeIO, probeHttp, probeStdio, runCapture, writeConfig } from './native';
 
 export interface TargetResult {

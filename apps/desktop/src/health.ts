@@ -10,7 +10,7 @@ import {
   type Inventory,
   type ProbeResult,
   t,
-} from '@cradle/core';
+} from '@cradler-desktop/core';
 import { probeHttp, probeStdio, runCapture } from './native';
 
 export interface EnvCheck {

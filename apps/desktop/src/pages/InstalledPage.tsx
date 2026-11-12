@@ -10,7 +10,7 @@ import {
   type RepairKind,
   type ServerGroup,
   type SkillGroup,
-} from '@cradle/core';
+} from '@cradler-desktop/core';
 import type { HealthState } from '../health';
 import { worst } from '../health';
 import { nativeError, reveal, runCapture, shortPath, trashSkill } from '../native';

@@ -1,14 +1,18 @@
-# Cradle
+# Cradler Desktop
 
-Cradle is an AI extension manager for people who are not developers. Paste a GitHub link, an install command or a config snippet, and it installs the skills, MCP servers and plugins inside into Claude, Cursor, Codex and other apps. Everything you have installed can be health-checked, fixed with one click and edited in place.
+Cradler Desktop is an AI extension manager for people who are not developers. Paste a GitHub link, an install command or a config snippet, and it installs the skills, MCP servers and plugins inside into Claude, Cursor, Codex and other apps. Everything you have installed can be health-checked, fixed with one click and edited in place.
 
-[中文](README.md)
+[中文](README.md) · Website: [cradler.ai/desktop](https://cradler.ai/desktop)
 
-macOS only for now. Early version (0.1).
+Cradler Desktop is the free, open-source desktop app from [Cradler](https://cradler.ai). macOS only for now (Apple silicon and Intel). Early version (0.1).
+
+## Download
+
+Get the `.dmg` from [Releases](https://github.com/cradler-ai/desktop/releases/latest), open it and drag Cradler Desktop into Applications. The app is signed and notarized by Apple, so it opens with a double-click.
 
 ## Why
 
-Open-source skills and MCP servers are hard to install if you have never used a terminal. When they don't work you rarely find out why: maybe the app needed a restart, maybe a key is missing, maybe the command was written wrong. Cradle does all of that for you, without a terminal and without editing JSON.
+Open-source skills and MCP servers are hard to install if you have never used a terminal. When they don't work you rarely find out why: maybe the app needed a restart, maybe a key is missing, maybe the command was written wrong. Cradler Desktop does all of that for you, without a terminal and without editing JSON.
 
 ## What it does
 
@@ -53,7 +57,7 @@ Installed and Health check read the configs of Claude Code, Claude Desktop, Curs
 ## Safety
 
 - Detected commands are never executed. They are taken apart and shown to you first.
-- Every config write is backed up to `~/Library/Application Support/ai.cradle.desktop/backups/` and then replaced atomically. Only a fixed set of config files and existing skill files can be written.
+- Every config write is backed up to `~/Library/Application Support/ai.cradler.desktop/backups/` and then replaced atomically. Only a fixed set of config files and existing skill files can be written.
 - Claude Code's config is changed through the official `claude mcp` commands.
 - Keys are masked in the interface.
 - No analytics. It only goes online to read a GitHub repository you pasted, download a skill you install, look up packages on npm / PyPI, connect to MCP servers you configured during a health check, and install Node.js or uv when you click that button.
@@ -69,7 +73,7 @@ pnpm test        # unit tests
 pnpm typecheck
 ```
 
-Build: `pnpm --filter @cradle/desktop tauri build` (unsigned for now; right-click → Open the first time).
+Build: `pnpm --filter @cradler-desktop/desktop tauri build`. Your own builds are unsigned: the first time, open them from System Settings → Privacy & Security → Open Anyway.
 
 ## Layout
 
@@ -80,7 +84,6 @@ Build: `pnpm --filter @cradle/desktop tauri build` (unsigned for now; right-clic
 ## Not done yet
 
 - Windows and Linux
-- Code signing and notarization
 - Syncing an MCP server from one app to others
 - More interface languages
 

@@ -1,10 +1,14 @@
-# Cradle
+# Cradler Desktop
 
-Cradle 是给普通人用的 AI 扩展管家：复制一个 GitHub 地址、一条安装命令或一段配置，就能把 skill、MCP 和插件装进 Claude、Cursor、Codex 等应用；装好的东西能体检、能一键修、能直接编辑。
+Cradler Desktop 是给普通人用的 AI 扩展管家：复制一个 GitHub 地址、一条安装命令或一段配置，就能把 skill、MCP 和插件装进 Claude、Cursor、Codex 等应用；装好的东西能体检、能一键修、能直接编辑。
 
-[English](README.en.md)
+[English](README.en.md) · 官网：[cradler.ai/desktop](https://cradler.ai/desktop)
 
-目前只支持 macOS，处于早期版本（0.1）。
+Cradler Desktop 是 [Cradler](https://cradler.ai) 的开源桌面应用，免费使用。目前只支持 macOS（Apple 芯片和 Intel 芯片都可以），处于早期版本（0.1）。
+
+## 下载
+
+到 [Releases](https://github.com/cradler-ai/desktop/releases/latest) 下载 `.dmg`，打开后把 Cradler Desktop 拖进「应用程序」文件夹。安装包经过 Apple 签名和公证，双击就能打开。
 
 ## 为什么做这个
 
@@ -53,7 +57,7 @@ Cradle 是给普通人用的 AI 扩展管家：复制一个 GitHub 地址、一�
 ## 安全
 
 - 识别出来的命令绝不直接执行，只拆开给你看清楚要装什么、装到哪。
-- 写配置之前先备份到 `~/Library/Application Support/ai.cradle.desktop/backups/`，再整体替换；只允许写固定的几份配置文件和已有的技能文件。
+- 写配置之前先备份到 `~/Library/Application Support/ai.cradler.desktop/backups/`，再整体替换；只允许写固定的几份配置文件和已有的技能文件。
 - Claude Code 的配置通过官方的 `claude mcp` 命令修改，不直接改它的文件。
 - 密钥在界面上默认打码。
 - 没有任何统计上报。只有这些时候会联网：读取你粘贴的 GitHub 仓库、下载要装的 skill、去 npm / PyPI 查询包是否存在、体检时连接你自己配置的 MCP 服务、你点了安装 Node.js 或 uv。
@@ -69,7 +73,7 @@ pnpm test        # 单元测试
 pnpm typecheck   # 类型检查
 ```
 
-打包：`pnpm --filter @cradle/desktop tauri build`（目前没有签名，第一次打开需要右键选「打开」）。
+打包：`pnpm --filter @cradler-desktop/desktop tauri build`。自己打包的版本没有签名，第一次打开要到「系统设置 → 隐私与安全性」里点「仍要打开」。
 
 ## 目录结构
 
@@ -80,7 +84,6 @@ pnpm typecheck   # 类型检查
 ## 还没做
 
 - Windows 和 Linux
-- 签名和公证
 - 把一个应用里的 MCP 同步到其他应用
 - 更多界面语言
 

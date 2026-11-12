@@ -10,7 +10,7 @@ importers:
 
   apps/desktop:
     dependencies:
-      '@cradle/core':
+      '@cradler-desktop/core':
         specifier: workspace:*
         version: link:../../packages/core
       '@tauri-apps/api':

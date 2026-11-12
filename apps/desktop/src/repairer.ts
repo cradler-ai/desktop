@@ -11,7 +11,7 @@ import {
   type RepairField,
   type RepairInput,
   type RepairKind,
-} from '@cradle/core';
+} from '@cradler-desktop/core';
 import { backupClaudeJson, installNode, installUv, nativeError, nativeIO, runCapture, writeConfig } from './native';
 
 const browserFetch: FetchLike = (u, i) => globalThis.fetch(u, i);

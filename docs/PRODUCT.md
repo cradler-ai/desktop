@@ -1,4 +1,4 @@
-# Cradle（AI 扩展管家）
+# Cradler Desktop（AI 扩展管家）
 
 给普通人用的 AI 扩展安装器：复制一个 GitHub 地址、一条安装命令或一段配置，就能把 skill、MCP、插件装进 Claude、Cursor、Codex 等应用。
 
@@ -38,7 +38,7 @@
 - 体检：逐个真实启动/连接 MCP，报错翻译成大白话；能修的给「修复」按钮（拆开写在一起的命令、填密钥、改成自动下载运行、改地址、安装 Node/uv、删掉这条配置），确认后写回原处并自动重新检查；检查运行环境和配置文件格式。
 - 编辑：技能文件（SKILL.md 等）、单个 MCP（表单）、整个配置文件（保存前校验语法）都能在应用里打开修改，保存即写回、先备份；`~/.claude.json` 只能逐项改。
 - 多语言：跟随系统语言，中文系统显示中文，其他显示英文。
-- 每次写配置前自动备份到 `~/Library/Application Support/ai.cradle.desktop/backups/`。
+- 每次写配置前自动备份到 `~/Library/Application Support/ai.cradler.desktop/backups/`。
 - 还没做：同步到其他应用、签名公证、Windows、更多语言。
 
 ## 竞品（2026-11 调研）

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { detect, t, type ClientId, type DetectResult } from '@cradle/core';
+import { detect, t, type ClientId, type DetectResult } from '@cradler-desktop/core';
 import { Results } from '../Results';
 import { IconArrowUp } from '../icons';
 

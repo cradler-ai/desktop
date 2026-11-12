@@ -1,11 +1,11 @@
-# Cradle（AI 扩展管家）
+# Cradler Desktop（AI 扩展管家）
 
 产品定位、用户痛点和设计原则见 `docs/PRODUCT.md`，改功能前先读。
 
 ## 结构
 
 - `packages/core`：识别引擎（纯 TypeScript，不依赖 Node 或 Tauri，浏览器里也能跑）。入口 `detect(input)`。
-- `apps/desktop`：Tauri 2 + React 桌面应用，直接 import `@cradle/core`。
+- `apps/desktop`：Tauri 2 + React 桌面应用，直接 import `@cradler-desktop/core`。
 
 ## 命令（一律用 pnpm）
 

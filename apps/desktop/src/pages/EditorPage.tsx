@@ -12,7 +12,7 @@ import {
   type InstalledSkill,
   type RawServerConfig,
   type RepairKind,
-} from '@cradle/core';
+} from '@cradler-desktop/core';
 import { nativeError, nativeIO, reveal, shortPath, writeConfig } from '../native';
 import { writeServer } from '../repairer';
 import type { HealthState } from '../health';
