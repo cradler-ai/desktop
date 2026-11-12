@@ -1,0 +1,15 @@
+{
+  "name": "mcp-manager",
+  "private": true,
+  "license": "MIT",
+  "packageManager": "pnpm@10.34.5",
+  "scripts": {
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "eval:repos": "pnpm --filter @mcp-manager/core eval:repos",
+    "dev": "pnpm --filter @mcp-manager/desktop tauri dev"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  }
+}
