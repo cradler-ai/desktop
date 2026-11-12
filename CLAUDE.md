@@ -21,3 +21,11 @@
 - 识别出的命令绝不直接执行；写配置只能经过 Rust 的 `write_config`（白名单 + 先备份 + 原子替换）；改 Claude Code 配置走官方 `claude mcp` 命令。
 - 动画只能动位置，不能从透明度 0 开始：后台窗口的动画会被系统冻结，内容会卡在看不见的那一帧。
 - 调试截图可用 `?page=installed|health`、`?q=<输入>`、`?run=1`、`?focus=1` 这些启动参数（改 tauri.conf.json 的 devUrl，用完改回去）。
+
+## 发布新版本（macOS）
+
+1. 改版本号：`apps/desktop/src-tauri/tauri.conf.json` 和 `Cargo.toml`，以及 cradler.ai 网站 `src/app/[locale]/desktop/page.tsx` 里的 `VERSION`。
+2. 打包并签名（通用版）：`APPLE_SIGNING_IDENTITY="Developer ID Application: Wenjun LI (8224WGCM69)" pnpm --filter @cradler-desktop/desktop tauri build --target universal-apple-darwin --bundles app`
+3. 公证：`ditto -c -k --keepParent "Cradler Desktop.app" app.zip`，`xcrun notarytool submit app.zip --keychain-profile ShotShelf --wait`，再 `xcrun stapler staple "Cradler Desktop.app"`。凭据存在只有 Mac 解锁时才能读的钥匙串里：锁屏时会报 "No Keychain password item found"，`security` 命令也看不到它，以 `notarytool history` 的结果为准。
+4. 做 dmg：把 app 和指向 `/Applications` 的链接放进一个文件夹，`hdiutil create -volname "Cradler Desktop" -srcfolder <文件夹> -format UDZO Cradler-Desktop.dmg`，`codesign --timestamp --sign <同上身份>`，再公证、staple 一次 dmg。
+5. `gh release create vX.Y.Z Cradler-Desktop.dmg --repo cradler-ai/desktop`。**文件名必须保持 `Cradler-Desktop.dmg`**：网站下载按钮指向 `releases/latest/download/Cradler-Desktop.dmg`。

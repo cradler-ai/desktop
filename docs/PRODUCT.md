@@ -39,7 +39,8 @@
 - 编辑：技能文件（SKILL.md 等）、单个 MCP（表单）、整个配置文件（保存前校验语法）都能在应用里打开修改，保存即写回、先备份；`~/.claude.json` 只能逐项改。
 - 多语言：跟随系统语言，中文系统显示中文，其他显示英文。
 - 每次写配置前自动备份到 `~/Library/Application Support/ai.cradler.desktop/backups/`。
-- 还没做：同步到其他应用、签名公证、Windows、更多语言。
+- 发布：属于 Cradler，官网介绍页 https://cradler.ai/desktop（网站代码在 cradler-ai/dashboard 仓库，五种语言），仓库 cradler-ai/desktop；v0.1.0（2026-11-12）通用版 dmg 已签名并公证。
+- 还没做：同步到其他应用、Windows、更多语言。
 
 ## 竞品（2026-11 调研）
 
