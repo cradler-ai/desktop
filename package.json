@@ -1,13 +1,13 @@
 {
-  "name": "mcp-manager",
+  "name": "cradle",
   "private": true,
   "license": "MIT",
   "packageManager": "pnpm@10.34.5",
   "scripts": {
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
-    "eval:repos": "pnpm --filter @mcp-manager/core eval:repos",
-    "dev": "pnpm --filter @mcp-manager/desktop tauri dev"
+    "eval:repos": "pnpm --filter @cradle/core eval:repos",
+    "dev": "pnpm --filter @cradle/desktop tauri dev"
   },
   "pnpm": {
     "onlyBuiltDependencies": ["esbuild"]

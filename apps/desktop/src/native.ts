@@ -1,6 +1,6 @@
 // Thin wrappers around the Rust commands (see src-tauri/src/lib.rs).
 import { invoke } from '@tauri-apps/api/core';
-import { t, type DirEntry, type InventoryIO, type ProbeResult } from '@mcp-manager/core';
+import { t, type DirEntry, type InventoryIO, type ProbeResult } from '@cradle/core';
 import { inTauri } from './clients';
 
 export interface CaptureResult {

@@ -12,7 +12,7 @@ import {
   type InstalledSkill,
   type RawServerConfig,
   type RepairKind,
-} from '@mcp-manager/core';
+} from '@cradle/core';
 import { nativeError, nativeIO, reveal, shortPath, writeConfig } from '../native';
 import { writeServer } from '../repairer';
 import type { HealthState } from '../health';

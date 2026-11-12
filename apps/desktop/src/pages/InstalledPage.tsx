@@ -10,7 +10,7 @@ import {
   type RepairKind,
   type ServerGroup,
   type SkillGroup,
-} from '@mcp-manager/core';
+} from '@cradle/core';
 import type { HealthState } from '../health';
 import { worst } from '../health';
 import { nativeError, reveal, runCapture, shortPath, trashSkill } from '../native';

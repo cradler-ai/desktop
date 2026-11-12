@@ -22,7 +22,7 @@ import {
   type RawServerConfig,
   t,
   clientLabel,
-} from '@mcp-manager/core';
+} from '@cradle/core';
 import { nativeError, nativeIO, probeHttp, probeStdio, runCapture, writeConfig } from './native';
 
 export interface TargetResult {

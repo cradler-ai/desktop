@@ -1,7 +1,7 @@
-import { registerMessages } from '@mcp-manager/core';
+import { registerMessages } from '@cradle/core';
 
 registerMessages('zh', {
-  'app.name': '扩展管家',
+  'app.name': 'Cradle',
   'nav.install': '安装',
   'nav.installed': '已安装',
   'nav.health': '体检',
@@ -233,7 +233,7 @@ registerMessages('zh', {
 });
 
 registerMessages('en', {
-  'app.name': 'AI Kit',
+  'app.name': 'Cradle',
   'nav.install': 'Install',
   'nav.installed': 'Installed',
   'nav.health': 'Health check',

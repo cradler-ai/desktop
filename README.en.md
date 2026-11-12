@@ -1,6 +1,6 @@
-# AI Kit
+# Cradle
 
-An AI extension manager for people who are not developers. Paste a GitHub link, an install command or a config snippet, and it installs the skills, MCP servers and plugins inside into Claude, Cursor, Codex and other apps. Everything you have installed can be health-checked, fixed with one click and edited in place.
+Cradle is an AI extension manager for people who are not developers. Paste a GitHub link, an install command or a config snippet, and it installs the skills, MCP servers and plugins inside into Claude, Cursor, Codex and other apps. Everything you have installed can be health-checked, fixed with one click and edited in place.
 
 [中文](README.md)
 
@@ -8,7 +8,7 @@ macOS only for now. Early version (0.1).
 
 ## Why
 
-Open-source skills and MCP servers are hard to install if you have never used a terminal. When they don't work you rarely find out why: maybe the app needed a restart, maybe a key is missing, maybe the command was written wrong. AI Kit does all of that for you, without a terminal and without editing JSON.
+Open-source skills and MCP servers are hard to install if you have never used a terminal. When they don't work you rarely find out why: maybe the app needed a restart, maybe a key is missing, maybe the command was written wrong. Cradle does all of that for you, without a terminal and without editing JSON.
 
 ## What it does
 
@@ -53,7 +53,7 @@ Installed and Health check read the configs of Claude Code, Claude Desktop, Curs
 ## Safety
 
 - Detected commands are never executed. They are taken apart and shown to you first.
-- Every config write is backed up to `~/Library/Application Support/app.mcpmanager.desktop/backups/` and then replaced atomically. Only a fixed set of config files and existing skill files can be written.
+- Every config write is backed up to `~/Library/Application Support/ai.cradle.desktop/backups/` and then replaced atomically. Only a fixed set of config files and existing skill files can be written.
 - Claude Code's config is changed through the official `claude mcp` commands.
 - Keys are masked in the interface.
 - No analytics. It only goes online to read a GitHub repository you pasted, download a skill you install, look up packages on npm / PyPI, connect to MCP servers you configured during a health check, and install Node.js or uv when you click that button.
@@ -69,7 +69,7 @@ pnpm test        # unit tests
 pnpm typecheck
 ```
 
-Build: `pnpm --filter @mcp-manager/desktop tauri build` (unsigned for now; right-click → Open the first time).
+Build: `pnpm --filter @cradle/desktop tauri build` (unsigned for now; right-click → Open the first time).
 
 ## Layout
 

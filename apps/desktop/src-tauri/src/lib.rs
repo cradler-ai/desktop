@@ -385,7 +385,7 @@ fn trash_skill(path: String) -> Result<(), String> {
 // ---------------------------------------------------------------------------
 
 fn app_data_dir() -> PathBuf {
-    home().join("Library/Application Support/app.mcpmanager.desktop")
+    home().join("Library/Application Support/ai.cradle.desktop")
 }
 
 fn stamp() -> String {
@@ -1118,12 +1118,12 @@ mod tests {
     use super::*;
 
     /// Real download into a throwaway HOME. Run with:
-    /// KIT_SKILL_SPEC=/path/spec.json KIT_TEST_HOME=/tmp/x cargo test install_skill_real -- --ignored
+    /// CRADLE_SKILL_SPEC=/path/spec.json CRADLE_TEST_HOME=/tmp/x cargo test install_skill_real -- --ignored
     #[test]
     #[ignore]
     fn install_skill_real() {
-        let spec: Value = serde_json::from_str(&std::fs::read_to_string(std::env::var("KIT_SKILL_SPEC").unwrap()).unwrap()).unwrap();
-        let fake_home = std::env::var("KIT_TEST_HOME").unwrap();
+        let spec: Value = serde_json::from_str(&std::fs::read_to_string(std::env::var("CRADLE_SKILL_SPEC").unwrap()).unwrap()).unwrap();
+        let fake_home = std::env::var("CRADLE_TEST_HOME").unwrap();
         unsafe { std::env::set_var("HOME", &fake_home) };
         let folder = spec["folder"].as_str().unwrap();
         let targets = vec![
@@ -1168,11 +1168,11 @@ mod tests {
         assert!(w.backup.as_deref().map(|b| std::fs::read_to_string(b).unwrap() == "{\"mcpServers\":{}}\n").unwrap_or(false));
     }
 
-    /// KIT_TEST_HOME=/tmp/x cargo test write_skill_file_rules -- --ignored
+    /// CRADLE_TEST_HOME=/tmp/x cargo test write_skill_file_rules -- --ignored
     #[test]
     #[ignore]
     fn write_skill_file_rules() {
-        let fake_home = std::env::var("KIT_TEST_HOME").unwrap();
+        let fake_home = std::env::var("CRADLE_TEST_HOME").unwrap();
         unsafe { std::env::set_var("HOME", &fake_home) };
         let skill = format!("{fake_home}/.claude/skills/demo");
         let synced = format!("{fake_home}/.claude/skills/synced/b/demo2");

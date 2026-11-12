@@ -10,7 +10,7 @@ import {
   type HealthStatus,
   type InstalledServer,
   type RepairKind,
-} from '@mcp-manager/core';
+} from '@cradle/core';
 import { openExternal } from './clients';
 import { reveal } from './native';
 import { lookupRunner, previewRepair, runRepair } from './repairer';

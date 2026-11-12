@@ -10,7 +10,7 @@ import {
   type Inventory,
   type ProbeResult,
   t,
-} from '@mcp-manager/core';
+} from '@cradle/core';
 import { probeHttp, probeStdio, runCapture } from './native';
 
 export interface EnvCheck {

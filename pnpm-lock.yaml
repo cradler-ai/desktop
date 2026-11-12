@@ -10,7 +10,7 @@ importers:
 
   apps/desktop:
     dependencies:
-      '@mcp-manager/core':
+      '@cradle/core':
         specifier: workspace:*
         version: link:../../packages/core
       '@tauri-apps/api':

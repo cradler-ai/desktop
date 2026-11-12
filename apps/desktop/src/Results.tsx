@@ -17,7 +17,7 @@ import {
   type InputField,
   type InstallSpec,
   type RepoMeta,
-} from '@mcp-manager/core';
+} from '@cradle/core';
 import { open as openDialog } from '@tauri-apps/plugin-dialog';
 import { inTauri, openExternal } from './clients';
 import { install, restartApp, verify, type TargetResult } from './installer';

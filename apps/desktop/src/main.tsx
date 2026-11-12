@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './styles.css';
 import { inTauri } from './clients';
-import { pickLocale, setLocale, t } from '@mcp-manager/core';
+import { pickLocale, setLocale, t } from '@cradle/core';
 import './messages';
 
 if (inTauri) document.documentElement.classList.add('is-tauri');
