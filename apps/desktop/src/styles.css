@@ -1107,12 +1107,19 @@ textarea {
   border-radius: 14px;
   background: var(--card-2);
 }
+.signin-head {
+  padding: 0 0 6px;
+}
 .signin-title {
   display: flex;
   align-items: center;
   gap: 8px;
   font-weight: 600;
-  padding: 0 0 6px;
+}
+.signin-note {
+  margin: 4px 0 0 24px;
+  font-size: 12.5px;
+  color: var(--label-2);
 }
 .signin-row {
   display: flex;

@@ -50,12 +50,57 @@ export function needsSignInCheck(s: InstalledServer, r: ProbeResult): boolean {
   );
 }
 
+/** Online services by their own domain, with the brand spelled the way people write it. */
+const SERVICES: [domain: string, brand: string][] = [
+  ['apimodels.app', 'apimodels'],
+  ['asana.com', 'Asana'],
+  ['atlassian.com', 'Atlassian'],
+  ['canva.com', 'Canva'],
+  ['cloudflare.com', 'Cloudflare'],
+  ['context7.com', 'Context7'],
+  ['cradler.ai', 'Cradler'],
+  ['figma.com', 'Figma'],
+  ['github.com', 'GitHub'],
+  ['githubcopilot.com', 'GitHub'],
+  ['hubspot.com', 'HubSpot'],
+  ['intercom.com', 'Intercom'],
+  ['linear.app', 'Linear'],
+  ['neon.tech', 'Neon'],
+  ['notion.com', 'Notion'],
+  ['paypal.com', 'PayPal'],
+  ['sentry.dev', 'Sentry'],
+  ['slack.com', 'Slack'],
+  ['squareup.com', 'Square'],
+  ['stripe.com', 'Stripe'],
+  ['supabase.com', 'Supabase'],
+  ['vercel.com', 'Vercel'],
+  ['zapier.com', 'Zapier'],
+];
+const BY_DOMAIN = new Map(SERVICES);
+const BY_NAME = new Map(SERVICES.flatMap(([d, b]) => [[d.split('.')[0], b] as const, [b.toLowerCase(), b] as const]));
+
+/**
+ * The online service a server signs in to, the way a person would name it: "Stripe" for
+ * mcp.stripe.com. People read a bare "Sign in" as signing in to Cradler, so the button names the service.
+ * Only the service's own domain counts: an app hosted on vercel.app is not Vercel.
+ */
+export function serviceName(s: Pick<InstalledServer, 'name' | 'raw'>): string {
+  let host = '';
+  try {
+    host = s.raw.url ? new URL(s.raw.url).hostname.toLowerCase() : '';
+  } catch {
+    host = '';
+  }
+  const domain = host.split('.').slice(-2).join('.');
+  return BY_DOMAIN.get(domain) ?? BY_NAME.get(s.name.toLowerCase()) ?? s.name;
+}
+
 /** How to sign in to an online server in this app. */
-export function signInHint(client: ClientId, name: string): string {
-  if (SIGN_IN_CLIENTS.includes(client)) return t('diag.loginApp', { app: clientLabel(client) });
-  if (client === 'cursor') return t('diag.loginCursor', { name });
-  if (client === 'gemini') return t('diag.loginGemini', { name });
-  return t('diag.loginDetail', { app: clientLabel(client) });
+export function signInHint(client: ClientId, name: string, service: string): string {
+  if (SIGN_IN_CLIENTS.includes(client)) return t('diag.loginApp', { app: clientLabel(client), service });
+  if (client === 'cursor') return t('diag.loginCursor', { name, service });
+  if (client === 'gemini') return t('diag.loginGemini', { name, service });
+  return t('diag.loginDetail', { app: clientLabel(client), service });
 }
 
 /** Extra facts gathered outside the probe. */
@@ -93,6 +138,8 @@ export interface Diagnosis {
   raw?: string;
   tools?: string[];
   elapsedMs?: number;
+  /** For sign-ins: the online service the account belongs to ("Stripe"). */
+  service?: string;
 }
 
 const URLS = {
@@ -194,6 +241,20 @@ function finish(s: InstalledServer, d: Diagnosis): Diagnosis {
   };
 }
 
+/** An online server that signs in with OAuth and has no key in its config. */
+function signInDiagnosis(s: InstalledServer, ctx: DiagnoseContext, out: (x: Omit<Diagnosis, 'raw' | 'elapsedMs'>) => Diagnosis): Diagnosis {
+  const service = serviceName(s);
+  const app = clientLabel(s.client);
+  if (ctx.signedIn) return out({ status: 'ok', title: t('diag.signedIn', { service }), detail: t('diag.signedInDetail', { app, service }), fixes: [], service });
+  return out({
+    status: 'auth',
+    title: t('diag.login', { service }),
+    detail: t('diag.loginWhose', { service }) + signInHint(s.client, s.name, service),
+    fixes: SIGN_IN_CLIENTS.includes(s.client) ? [repair('sign-in', { primary: true, label: t('repair.signInTo', { service }) }), retry()] : [retry()],
+    service,
+  });
+}
+
 export function diagnose(s: InstalledServer, r: ProbeResult, ctx: DiagnoseContext = {}): Diagnosis {
   const raw = s.raw;
   const out = (x: Omit<Diagnosis, 'raw' | 'elapsedMs'>): Diagnosis =>
@@ -240,14 +301,7 @@ export function diagnose(s: InstalledServer, r: ProbeResult, ctx: DiagnoseContex
               detail: t('diag.badTokenDetail', { unresolved, code }),
               fixes: [repair('set-values', { primary: true, fields }), ...reveal(s), retry()],
             })
-          : ctx.signedIn
-            ? out({ status: 'ok', title: t('diag.signedIn'), detail: t('diag.signedInDetail', { app: clientLabel(s.client) }), fixes: [] })
-            : out({
-                status: 'auth',
-                title: t('diag.login'),
-                detail: signInHint(s.client, s.name),
-                fixes: SIGN_IN_CLIENTS.includes(s.client) ? [repair('sign-in', { primary: true }), retry()] : [retry()],
-              });
+          : signInDiagnosis(s, ctx, out);
       }
       if (code === 404) return out({ status: 'error', title: t('diag.wrongUrl'), detail: t('diag.wrongUrlDetail'), fixes: [editUrl, removeFix, retry()] });
       if (code === 405 && raw.transport === 'http')

@@ -21,7 +21,7 @@ Cradler Desktop 是 [Cradler](https://cradler.ai) 的开源桌面应用，免费
 - 粘贴 GitHub 仓库地址、安装命令（`npx …`、`uvx …`、`claude mcp add …`）、JSON / TOML 配置或安装链接，自动识别里面有哪些 skill、MCP 和插件。
 - 需要你提供的密钥、文件夹会单独列出来让你填。
 - 勾选要装进哪些应用，一键写入；装完自动测一次能不能连上，需要重启的应用直接给重启按钮。
-- 需要登录的在线服务（比如 Notion）：在 Claude Code 和 Codex 里点「登录」就会打开浏览器授权，其他应用会告诉你去哪里登录。
+- 需要登录的在线服务（比如 Notion）：在 Claude Code 和 Codex 里点「登录 Notion」就会打开浏览器授权，其他应用会告诉你去哪里登录。登录的是你在那个服务的账号，Cradler Desktop 本身不需要注册或登录。
 - 安装页有一份推荐列表。其中 [apimodels](https://apimodels.app) 和 [Cradler](https://cradler.ai) 是我们自己的产品，卡片上标着「我们的产品」；只有你点了才会安装，不会预装任何东西。
 
 **已安装**

@@ -360,7 +360,7 @@ function InstallReport({ results, check }: { results: TargetResult[]; check?: Di
           {t('report.testing')}
         </div>
       )}
-      {check && check !== 'running' && check.status === 'auth' && <SignInSteps results={results} />}
+      {check && check !== 'running' && check.status === 'auth' && <SignInSteps results={results} service={check.service ?? ''} />}
       {check && check !== 'running' && check.status !== 'auth' && (
         <DiagnosisView diag={{ ...check, title: check.status === 'ok' ? t('report.testOk') : t('report.testBad', { title: check.title }) }} />
       )}
@@ -369,22 +369,25 @@ function InstallReport({ results, check }: { results: TargetResult[]; check?: Di
 }
 
 /** An online server that signs in with OAuth: one row per app it went into. */
-function SignInSteps({ results }: { results: TargetResult[] }) {
+function SignInSteps({ results, service }: { results: TargetResult[]; service: string }) {
   const rows = results.filter((r) => r.status === 'ok' && r.serverName);
   return (
     <div className="signin">
-      <div className="signin-title">
-        <IconLock size={16} />
-        {t('report.signInTitle')}
+      <div className="signin-head">
+        <div className="signin-title">
+          <IconLock size={16} />
+          {t('report.signInTitle', { service })}
+        </div>
+        <p className="signin-note">{t('diag.loginWhose', { service })}</p>
       </div>
       {rows.map((r) => (
-        <SignInRow key={r.client} client={r.client} name={r.serverName!} />
+        <SignInRow key={r.client} client={r.client} name={r.serverName!} service={service} />
       ))}
     </div>
   );
 }
 
-function SignInRow({ client, name }: { client: ClientId; name: string }) {
+function SignInRow({ client, name, service }: { client: ClientId; name: string; service: string }) {
   const fromHere = SIGN_IN_CLIENTS.includes(client);
   const [state, setState] = useState<'idle' | 'working' | 'done'>('idle');
   const [msg, setMsg] = useState<string | null>(null);
@@ -416,12 +419,12 @@ function SignInRow({ client, name }: { client: ClientId; name: string }) {
       <div className="signin-main">
         <span className="signin-app">{clientLabel(client)}</span>
         <span className="signin-text">
-          {state === 'done' ? t('diag.signedIn') : state === 'working' ? t('repair.signInWaiting') : (msg ?? signInHint(client, name))}
+          {state === 'done' ? t('diag.signedIn', { service }) : state === 'working' ? t('repair.signInWaiting') : (msg ?? signInHint(client, name, service))}
         </span>
       </div>
       {fromHere && state === 'idle' && (
         <button className="btn-small btn-small--ink" onClick={go}>
-          {t('repair.sign-in')}
+          {t('repair.signInTo', { service })}
         </button>
       )}
       {state === 'working' && (

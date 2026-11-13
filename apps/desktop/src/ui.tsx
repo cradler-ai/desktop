@@ -4,6 +4,7 @@ import {
   displayConfig,
   getLocale,
   scopeText,
+  serviceName,
   t,
   type Diagnosis,
   type Fix,
@@ -254,7 +255,7 @@ function RepairPanel(props: { fix: Fix; servers: InstalledServer[]; onCancel: ()
       {kind === 'remove' && <div className="hint-line">{t('repair.removeWarn', { places })}</div>}
       {kind === 'install-node' && <div className="hint-line">{t('repair.nodeWarn')}</div>}
       {kind === 'install-uv' && <div className="hint-line">{t('repair.uvWarn')}</div>}
-      {kind === 'sign-in' && phase === 'edit' && <div className="hint-line">{t('repair.signInWarn')}</div>}
+      {kind === 'sign-in' && phase === 'edit' && <div className="hint-line">{t('repair.signInWarn', { service: serviceName(first) })}</div>}
       {kind === 'sign-in' && phase === 'working' && (
         <div className="hint-line">
           <span className="spinner spinner--muted" /> {t('repair.signInWaiting')}

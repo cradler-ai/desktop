@@ -19,7 +19,7 @@
 - 界面文字一律走 `t()`，不要写死：核心文案在 `packages/core/src/i18n.ts`，界面文案在 `apps/desktop/src/messages.ts`，中英两份都要加。Rust 只返回错误代码（`code|detail`），由 `nativeError()` 翻译。
 - 界面：黑白分明 + 原生毛玻璃（各层半透明白，别用不透明底色盖住玻璃；黑字、黑色主按钮），颜色只给状态用；大圆角、无描边、无投影、无分割线、无 emoji；不要左侧强调竖线。
 - 识别出的命令绝不直接执行；写配置只能经过 Rust 的 `write_config`（白名单 + 先备份 + 原子替换）；改 Claude Code 配置走官方 `claude mcp` 命令。
-- 在线服务的 OAuth 登录走官方命令 `claude mcp login` / `codex mcp login`（Rust 的 `mcp_sign_in`）。两个 CLI 都要终端（Claude Code 没终端直接拒绝），所以套在 `/usr/bin/script` 里跑，输入保持打开；登录状态用 `claude mcp get <名字>`（项目级要在项目目录里跑，插件的名字是 `plugin:<插件>:<服务>`）和 `codex mcp list --json` 的 `auth_status` 查。`cargo test sign_in_real -- --ignored` 用本地假服务测这条链路，不会打开浏览器。
+- 在线服务的 OAuth 登录走官方命令 `claude mcp login` / `codex mcp login`（Rust 的 `mcp_sign_in`）。两个 CLI 都要终端（Claude Code 没终端直接拒绝），所以套在 `/usr/bin/script` 里跑，输入保持打开；登录状态用 `claude mcp get <名字>`（项目级要在项目目录里跑，插件的名字是 `plugin:<插件>:<服务>`）和 `codex mcp list --json` 的 `auth_status` 查。`cargo test sign_in_real -- --ignored` 用本地假服务测这条链路，不会打开浏览器。凡是登录相关的标题、按钮和提示都要写出服务名（`serviceName`，按服务自己的域名认，托管在 vercel.app 上的不算 Vercel），并说明登录的是那个服务的账号、Cradler 本身不需要账号：光写「登录」会被理解成登录我们的应用。
 - 动画只能动位置，不能从透明度 0 开始：后台窗口的动画会被系统冻结，内容会卡在看不见的那一帧。
 - 调试截图可用 `?page=installed|health`、`?q=<输入>`、`?run=1`、`?focus=1` 这些启动参数（改 tauri.conf.json 的 devUrl，用完改回去）。
 

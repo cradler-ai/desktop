@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadInventory, type DirEntry, type InventoryIO, type InstalledServer } from '../src/inventory';
-import { cliServerName, diagnose, needsSignInCheck, precheck, type ProbeResult } from '../src/diagnose';
+import { cliServerName, diagnose, needsSignInCheck, precheck, serviceName, type ProbeResult } from '../src/diagnose';
 import { displayConfig, displayRaw, maskValue } from '../src/mask';
 
 const H = '/Users/me';
@@ -170,7 +170,7 @@ describe('precheck / diagnose', () => {
 
   it('remote: login needed vs bad token', () => {
     const plain = server({ url: 'https://mcp.stripe.com', transport: 'http' });
-    expect(diagnose(plain, probe({ error: 'http-status', httpStatus: 401, authHeader: true }))).toMatchObject({ status: 'auth', title: '需要登录' });
+    expect(diagnose(plain, probe({ error: 'http-status', httpStatus: 401, authHeader: true }))).toMatchObject({ status: 'auth', title: '需要登录 Stripe', service: 'Stripe' });
     const withToken = server({ url: 'https://x.dev/mcp', transport: 'http', headers: { Authorization: 'Bearer abc' } });
     expect(diagnose(withToken, probe({ error: 'http-status', httpStatus: 401 }))).toMatchObject({ status: 'error', title: '密钥不对或已过期' });
   });
@@ -180,9 +180,16 @@ describe('precheck / diagnose', () => {
     const url = { url: 'https://api.apimodels.app/mcp', transport: 'http' as const };
     const cc = server(url, { client: 'claude-code', name: 'apimodels' });
     expect(needsSignInCheck(cc, r401)).toBe(true);
-    expect(diagnose(cc, r401)).toMatchObject({ status: 'auth', fixes: [{ repair: 'sign-in', primary: true }, { kind: 'retry' }] });
+    expect(diagnose(cc, r401)).toMatchObject({
+      status: 'auth',
+      title: '需要登录 apimodels',
+      fixes: [{ repair: 'sign-in', primary: true, label: '登录 apimodels' }, { kind: 'retry' }],
+    });
+    // says whose account it is: people read a bare "Sign in" as signing in to Cradler
+    expect(diagnose(cc, r401).detail).toContain('你的 apimodels 账号');
+    expect(diagnose(cc, r401).detail).toContain('Cradler 本身不需要账号');
     expect(diagnose(cc, r401).detail).toContain('Claude Code');
-    expect(diagnose(cc, r401, { signedIn: true })).toMatchObject({ status: 'ok', title: '已登录', fixes: [] });
+    expect(diagnose(cc, r401, { signedIn: true })).toMatchObject({ status: 'ok', title: '已登录 apimodels', fixes: [] });
     expect(diagnose(cc, r401, { signedIn: false }).status).toBe('auth');
     expect(diagnose(cc, r401, { signedIn: null }).status).toBe('auth');
 
@@ -199,6 +206,19 @@ describe('precheck / diagnose', () => {
     const keyed = server({ ...url, headers: { Authorization: 'Bearer sk_1' } }, { client: 'claude-code' });
     expect(needsSignInCheck(keyed, r401)).toBe(false);
     expect(needsSignInCheck(cc, probe({ error: 'http-status', httpStatus: 500 }))).toBe(false);
+  });
+
+  it('names the service a sign-in belongs to', () => {
+    const named = (url: string | undefined, name: string) => serviceName(server(url ? { url, transport: 'http' } : {}, { name }));
+    expect(named('https://mcp.stripe.com', 'stripe')).toBe('Stripe');
+    expect(named('https://mcp.notion.com/mcp', 'my-notes')).toBe('Notion');
+    expect(named('https://mcp.paypal.com/mcp', 'paypal')).toBe('PayPal');
+    expect(named('https://api.apimodels.app/mcp', 'models')).toBe('apimodels');
+    expect(named('https://mcp.example.dev/mcp', 'acme')).toBe('acme');
+    expect(named('https://acme-mcp.vercel.app/mcp', 'acme')).toBe('acme');
+    expect(named('https://api.githubcopilot.com/mcp/', 'gh')).toBe('GitHub');
+    expect(named(undefined, 'github')).toBe('GitHub');
+    expect(named('not a url', 'thing')).toBe('thing');
   });
 
   it('plugin servers keep the sign-in button and use the CLI name', () => {

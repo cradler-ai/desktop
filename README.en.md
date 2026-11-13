@@ -21,7 +21,7 @@ Open-source skills and MCP servers are hard to install if you have never used a 
 - Paste a GitHub repository, an install command (`npx …`, `uvx …`, `claude mcp add …`), a JSON / TOML config or an install link. It detects the skills, MCP servers and plugins inside.
 - Keys and folders you need to provide are listed as simple fields.
 - Pick the apps to install into and click once. It tests the connection afterwards and offers a restart button for apps that need one.
-- Online services that need a sign-in (Notion, for example): in Claude Code and Codex, click Sign in and approve in your browser; for other apps it tells you where to sign in.
+- Online services that need a sign-in (Notion, for example): in Claude Code and Codex, click Sign in to Notion and approve in your browser; for other apps it tells you where to sign in. That is your account with the service; Cradler Desktop itself needs no account.
 - The Install page shows a short list of recommendations. Two of them, [apimodels](https://apimodels.app) and [Cradler](https://cradler.ai), are our own products and are labelled "Our product". Nothing is installed unless you click it.
 
 **Installed**
