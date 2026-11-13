@@ -3,11 +3,18 @@ import { detect, t, type ClientId, type DetectResult } from '@cradler-desktop/co
 import { Results } from '../Results';
 import { IconArrowUp } from '../icons';
 
-const EXAMPLES = [
-  { label: 'microsoft/playwright-mcp', value: 'https://github.com/microsoft/playwright-mcp' },
-  { label: 'anthropics/skills', value: 'https://github.com/anthropics/skills' },
-  { label: 'claude mcp add … sentry', value: 'claude mcp add --transport http sentry https://mcp.sentry.dev/mcp' },
-  { label: 'npx -y firecrawl-mcp', value: 'npx -y firecrawl-mcp' },
+/**
+ * Recommended extensions, installed through the same detection as a pasted link. Each value is the
+ * input that detects to exactly one clean item. `ours` = made by the people behind this app, and the
+ * card says so.
+ */
+const PICKS: { id: string; name?: string; value: string; ours?: boolean }[] = [
+  { id: 'apimodels', name: 'apimodels', value: 'https://api.apimodels.app/mcp', ours: true },
+  { id: 'cradler', name: 'Cradler', value: 'https://github.com/cradler-ai/mcp', ours: true },
+  { id: 'playwright', name: 'Playwright', value: 'https://github.com/microsoft/playwright-mcp' },
+  { id: 'context7', name: 'Context7', value: 'https://mcp.context7.com/mcp' },
+  { id: 'notion', name: 'Notion', value: 'https://mcp.notion.com/mcp' },
+  { id: 'pptx', value: 'https://github.com/anthropics/skills/tree/main/skills/pptx' },
 ];
 
 type State =
@@ -66,13 +73,20 @@ export function InstallPage(props: {
       <InputBox value={text} onChange={setText} onSubmit={run} busy={state.status === 'loading'} autoFocus={!compact} />
 
       {!compact && (
-        <div className="examples">
-          {EXAMPLES.map((e) => (
-            <button key={e.label} className="chip" onClick={() => run(e.value)}>
-              {e.label}
-            </button>
-          ))}
-        </div>
+        <section className="picks" aria-label={t('picks.title')}>
+          <div className="picks-label">{t('picks.title')}</div>
+          <div className="picks-grid">
+            {PICKS.map((p) => (
+              <button key={p.id} className="pick" onClick={() => run(p.value)}>
+                <span className="pick-head">
+                  <span className="pick-name">{p.name ?? t(`picks.${p.id}.name`)}</span>
+                  {p.ours && <span className="pick-ours">{t('picks.ours')}</span>}
+                </span>
+                <span className="pick-desc">{t(`picks.${p.id}`)}</span>
+              </button>
+            ))}
+          </div>
+        </section>
       )}
 
       {state.status === 'loading' && <Loading input={state.input} />}

@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
+  SIGN_IN_CLIENTS,
   clientLabel,
+  signInHint,
   inputId,
   inputsOf,
   missingInputs,
@@ -21,6 +23,8 @@ import {
 import { open as openDialog } from '@tauri-apps/plugin-dialog';
 import { inTauri, openExternal } from './clients';
 import { install, restartApp, verify, type TargetResult } from './installer';
+import { appSignedIn, cancelSignIn } from './native';
+import { signInOnce } from './repairer';
 import { DiagnosisView } from './ui';
 import {
   IconAlert,
@@ -35,6 +39,7 @@ import {
   IconGlobe,
   IconInfo,
   IconKey,
+  IconLock,
   IconPackage,
   IconPuzzle,
   IconRuntime,
@@ -355,7 +360,75 @@ function InstallReport({ results, check }: { results: TargetResult[]; check?: Di
           {t('report.testing')}
         </div>
       )}
-      {check && check !== 'running' && <DiagnosisView diag={{ ...check, title: check.status === 'ok' ? t('report.testOk') : t('report.testBad', { title: check.title }) }} />}
+      {check && check !== 'running' && check.status === 'auth' && <SignInSteps results={results} />}
+      {check && check !== 'running' && check.status !== 'auth' && (
+        <DiagnosisView diag={{ ...check, title: check.status === 'ok' ? t('report.testOk') : t('report.testBad', { title: check.title }) }} />
+      )}
+    </div>
+  );
+}
+
+/** An online server that signs in with OAuth: one row per app it went into. */
+function SignInSteps({ results }: { results: TargetResult[] }) {
+  const rows = results.filter((r) => r.status === 'ok' && r.serverName);
+  return (
+    <div className="signin">
+      <div className="signin-title">
+        <IconLock size={16} />
+        {t('report.signInTitle')}
+      </div>
+      {rows.map((r) => (
+        <SignInRow key={r.client} client={r.client} name={r.serverName!} />
+      ))}
+    </div>
+  );
+}
+
+function SignInRow({ client, name }: { client: ClientId; name: string }) {
+  const fromHere = SIGN_IN_CLIENTS.includes(client);
+  const [state, setState] = useState<'idle' | 'working' | 'done'>('idle');
+  const [msg, setMsg] = useState<string | null>(null);
+
+  // Already signed in (e.g. installed again)?
+  useEffect(() => {
+    if (fromHere) appSignedIn(client, name).then((v) => v && setState('done'), () => {});
+  }, [fromHere, client, name]);
+
+  async function go() {
+    setState('working');
+    setMsg(null);
+    const r = await signInOnce(client, name);
+    if (!r.ok) {
+      setState('idle');
+      setMsg(r.message);
+      return;
+    }
+    const signedIn = await appSignedIn(client, name).catch(() => null);
+    if (signedIn === false) {
+      setState('idle');
+      setMsg(t('repair.signInNotYet'));
+    } else setState('done');
+  }
+
+  return (
+    <div className={`signin-row ${state === 'done' ? 'is-done' : ''}`}>
+      <span className="signin-icon">{state === 'done' ? <IconCheckCircle size={16} /> : <IconLock size={16} />}</span>
+      <div className="signin-main">
+        <span className="signin-app">{clientLabel(client)}</span>
+        <span className="signin-text">
+          {state === 'done' ? t('diag.signedIn') : state === 'working' ? t('repair.signInWaiting') : (msg ?? signInHint(client, name))}
+        </span>
+      </div>
+      {fromHere && state === 'idle' && (
+        <button className="btn-small btn-small--ink" onClick={go}>
+          {t('repair.sign-in')}
+        </button>
+      )}
+      {state === 'working' && (
+        <button className="btn-small" onClick={() => void cancelSignIn()}>
+          {t('common.cancel')}
+        </button>
+      )}
     </div>
   );
 }

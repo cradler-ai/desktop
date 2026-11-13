@@ -33,9 +33,10 @@
 
 ## 现在的进度（2026-11-12）
 
-- 安装：粘贴即识别；skill 直接下载进 Claude Code / Codex 的技能文件夹（同名旧版移到废纸篓）；MCP 写进 Claude Code（官方命令）、Cursor / Claude 桌面版 / Gemini（JSON，保留原格式）、Codex（TOML）；插件走 `claude plugin`；装完自动测一次连接；Claude 桌面版给「立即重启」。
+- 安装：粘贴即识别；skill 直接下载进 Claude Code / Codex 的技能文件夹（同名旧版移到废纸篓）；MCP 写进 Claude Code（官方命令）、Cursor / Claude 桌面版 / Gemini（JSON，保留原格式）、Codex（TOML）；插件走 `claude plugin`；装完自动测一次连接；Claude 桌面版给「立即重启」；需要 OAuth 登录的在线服务装完列出每个应用怎么登录（Claude Code / Codex 直接给「登录」按钮）。
+- 推荐列表（2026-11-13）：安装页输入框下方 6 项，apimodels、Cradler、Playwright、Context7、Notion、PPT 技能。apimodels 和 Cradler 是 owner 自己的产品，卡片上标「我们的产品」；只推荐不预装（预装会损害开源工具的中立感，没注册的用户还会看到报错，也会给每次对话加上一堆用不到的工具说明）。每项的输入都选能识别成「恰好一项」的写法（在线服务用地址，技能用单个技能的链接）。
 - 已安装：读 5 个应用的 MCP（含项目级、插件自带的）、所有技能目录（含账号同步、符号链接）、Claude 插件；标出「各处配置不一样」「内容不一样」；插件可启停，技能可移到废纸篓。
-- 体检：逐个真实启动/连接 MCP，报错翻译成大白话；能修的给「修复」按钮（拆开写在一起的命令、填密钥、改成自动下载运行、改地址、安装 Node/uv、删掉这条配置），确认后写回原处并自动重新检查；检查运行环境和配置文件格式。
+- 体检：逐个真实启动/连接 MCP，报错翻译成大白话；能修的给「修复」按钮（拆开写在一起的命令、填密钥、改成自动下载运行、改地址、安装 Node/uv、删掉这条配置、登录），确认后写回原处并自动重新检查；检查运行环境和配置文件格式。在线服务返回 401 且配置里没有密钥时，去问 Claude Code（`claude mcp get`）/ Codex（`codex mcp list --json`）自己有没有登录，登录信息只在它们手里。
 - 编辑：技能文件（SKILL.md 等）、单个 MCP（表单）、整个配置文件（保存前校验语法）都能在应用里打开修改，保存即写回、先备份；`~/.claude.json` 只能逐项改。
 - 多语言：跟随系统语言，中文系统显示中文，其他显示英文。
 - 每次写配置前自动备份到 `~/Library/Application Support/ai.cradler.desktop/backups/`。

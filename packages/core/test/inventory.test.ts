@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadInventory, type DirEntry, type InventoryIO, type InstalledServer } from '../src/inventory';
-import { diagnose, precheck, type ProbeResult } from '../src/diagnose';
+import { cliServerName, diagnose, needsSignInCheck, precheck, type ProbeResult } from '../src/diagnose';
 import { displayConfig, displayRaw, maskValue } from '../src/mask';
 
 const H = '/Users/me';
@@ -173,6 +173,39 @@ describe('precheck / diagnose', () => {
     expect(diagnose(plain, probe({ error: 'http-status', httpStatus: 401, authHeader: true }))).toMatchObject({ status: 'auth', title: '需要登录' });
     const withToken = server({ url: 'https://x.dev/mcp', transport: 'http', headers: { Authorization: 'Bearer abc' } });
     expect(diagnose(withToken, probe({ error: 'http-status', httpStatus: 401 }))).toMatchObject({ status: 'error', title: '密钥不对或已过期' });
+  });
+
+  it('remote OAuth: sign in from here in Claude Code / Codex, explain elsewhere', () => {
+    const r401 = probe({ error: 'http-status', httpStatus: 401, authHeader: true });
+    const url = { url: 'https://api.apimodels.app/mcp', transport: 'http' as const };
+    const cc = server(url, { client: 'claude-code', name: 'apimodels' });
+    expect(needsSignInCheck(cc, r401)).toBe(true);
+    expect(diagnose(cc, r401)).toMatchObject({ status: 'auth', fixes: [{ repair: 'sign-in', primary: true }, { kind: 'retry' }] });
+    expect(diagnose(cc, r401).detail).toContain('Claude Code');
+    expect(diagnose(cc, r401, { signedIn: true })).toMatchObject({ status: 'ok', title: '已登录', fixes: [] });
+    expect(diagnose(cc, r401, { signedIn: false }).status).toBe('auth');
+    expect(diagnose(cc, r401, { signedIn: null }).status).toBe('auth');
+
+    const codex = server(url, { client: 'codex', name: 'apimodels' });
+    expect(diagnose(codex, r401).fixes[0]).toMatchObject({ repair: 'sign-in' });
+
+    const cursor = server(url, { name: 'apimodels' });
+    expect(needsSignInCheck(cursor, r401)).toBe(false);
+    expect(diagnose(cursor, r401)).toMatchObject({ status: 'auth', fixes: [{ kind: 'retry' }] });
+    expect(diagnose(cursor, r401).detail).toContain('Cursor');
+    expect(diagnose(server(url, { client: 'gemini', name: 'apimodels' }), r401).detail).toContain('/mcp auth apimodels');
+
+    // a key in the config: a wrong key, not a sign-in
+    const keyed = server({ ...url, headers: { Authorization: 'Bearer sk_1' } }, { client: 'claude-code' });
+    expect(needsSignInCheck(keyed, r401)).toBe(false);
+    expect(needsSignInCheck(cc, probe({ error: 'http-status', httpStatus: 500 }))).toBe(false);
+  });
+
+  it('plugin servers keep the sign-in button and use the CLI name', () => {
+    const p = server({ url: 'https://mcp.stripe.com', transport: 'http' }, { client: 'claude-code', scope: 'plugin', scopeLabel: 'stripe', name: 'stripe' });
+    expect(cliServerName(p)).toBe('plugin:stripe:stripe');
+    expect(cliServerName(server({}, { client: 'claude-code', name: 'gefei' }))).toBe('gefei');
+    expect(diagnose(p, probe({ error: 'http-status', httpStatus: 401 })).fixes.map((f) => f.repair ?? f.kind)).toEqual(['sign-in', 'retry']);
   });
 
   it('ok', () => {

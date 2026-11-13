@@ -275,7 +275,9 @@ fn allowed_invocation(program: &str, args: &[String]) -> bool {
     let a: Vec<&str> = args.iter().map(String::as_str).collect();
     let version = matches!(a.as_slice(), ["--version"] | ["-v"] | ["version"] | ["-V"]);
     match program {
-        "node" | "npm" | "npx" | "uv" | "uvx" | "python3" | "git" | "bun" | "codex" | "gemini" => version,
+        "node" | "npm" | "npx" | "uv" | "uvx" | "python3" | "git" | "bun" | "gemini" => version,
+        // sign-in status of online servers (see mcp_sign_in)
+        "codex" => version || matches!(a.as_slice(), ["mcp", "list", "--json"]),
         "docker" => version || matches!(a.as_slice(), ["info", "--format", _]),
         "claude" => {
             version
@@ -283,6 +285,7 @@ fn allowed_invocation(program: &str, args: &[String]) -> bool {
                 || matches!(a.as_slice(), ["plugin", "marketplace", "add", _])
                 || matches!(a.as_slice(), ["mcp", "add-json", _, _, "-s", "user" | "local"])
                 || matches!(a.as_slice(), ["mcp", "remove", _, "-s", "user" | "local"])
+                || matches!(a.as_slice(), ["mcp", "get", name] if !name.starts_with('-'))
         }
         _ => false,
     }
@@ -366,6 +369,157 @@ async fn run_capture(program: String, args: Vec<String>, timeout_ms: u64, cwd: O
         return CaptureResult { stderr: "not allowed".into(), ..Default::default() };
     }
     tauri::async_runtime::spawn_blocking(move || capture_blocking(program, args, timeout_ms, cwd)).await.unwrap_or_default()
+}
+
+// ---------------------------------------------------------------------------
+// Signing in to online MCP servers through the app's own CLI
+// ---------------------------------------------------------------------------
+
+struct SignInJob {
+    id: u64,
+    child: Child,
+    /// Held open until the CLI exits: with a closed, empty input both CLIs give up waiting.
+    _stdin: Option<ChildStdin>,
+    cancelled: bool,
+}
+
+static SIGN_IN: Mutex<Option<SignInJob>> = Mutex::new(None);
+static SIGN_IN_SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+#[derive(Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct SignInResult {
+    found: bool,
+    code: Option<i32>,
+    timed_out: bool,
+    cancelled: bool,
+    output: String,
+}
+
+/// Runs `claude mcp login <name>` / `codex mcp login <name>`: the CLI opens the browser and waits for
+/// the user to approve. Both want a terminal (Claude Code refuses without one), so they run under script(1).
+#[tauri::command]
+async fn mcp_sign_in(client: String, name: String, cwd: Option<String>) -> Result<SignInResult, String> {
+    tauri::async_runtime::spawn_blocking(move || sign_in_blocking(&client, &name, cwd))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+fn sign_in_blocking(client: &str, name: &str, cwd: Option<String>) -> Result<SignInResult, String> {
+    let program = match client {
+        "claude-code" => "claude",
+        "codex" => "codex",
+        _ => return Err("sign-in-unsupported".into()),
+    };
+    let name_ok = !name.is_empty() && !name.starts_with('-') && name.chars().all(|c| c.is_ascii_alphanumeric() || "-_.:@".contains(c));
+    if !name_ok {
+        return Err("sign-in-bad-name".into());
+    }
+    let mut r = SignInResult::default();
+    let dir = cwd.map(PathBuf::from).filter(|d| d.is_dir() && d.starts_with(home())).unwrap_or_else(home);
+    let Some(bin) = resolve_command(program, &dir) else { return Ok(r) };
+    r.found = true;
+    let mut command = Command::new("/usr/bin/script");
+    detach(&mut command);
+    let mut child = command
+        .arg("-q")
+        .arg("/dev/null")
+        .arg(&bin)
+        .args(["mcp", "login", name])
+        .envs(shell_env())
+        .current_dir(&dir)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("spawn-failed|{e}"))?;
+    let out = pipe_reader(child.stdout.take());
+    let err = pipe_reader(child.stderr.take());
+    let id = SIGN_IN_SEQ.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+    {
+        let mut slot = SIGN_IN.lock().unwrap();
+        // Only one sign-in at a time: a new one replaces a forgotten one.
+        if let Some(mut old) = slot.take() {
+            old.cancelled = true;
+            let _ = old.child.kill();
+            let _ = old.child.wait();
+        }
+        *slot = Some(SignInJob { id, _stdin: child.stdin.take(), child, cancelled: false });
+    }
+    let deadline = Instant::now() + Duration::from_secs(600);
+    loop {
+        std::thread::sleep(Duration::from_millis(200));
+        let mut slot = SIGN_IN.lock().unwrap();
+        let Some(job) = slot.as_mut().filter(|j| j.id == id) else {
+            r.cancelled = true; // replaced by a newer sign-in
+            break;
+        };
+        match job.child.try_wait() {
+            Ok(Some(status)) => {
+                r.code = status.code();
+                r.cancelled = job.cancelled;
+                *slot = None;
+                break;
+            }
+            Ok(None) if Instant::now() < deadline => {}
+            _ => {
+                r.timed_out = true;
+                let _ = job.child.kill();
+                let _ = job.child.wait();
+                *slot = None;
+                break;
+            }
+        }
+    }
+    std::thread::sleep(Duration::from_millis(50));
+    let text = format!("{}\n{}", String::from_utf8_lossy(&out.lock().unwrap()), String::from_utf8_lossy(&err.lock().unwrap()));
+    r.output = strip_ansi(&text).trim().to_string();
+    Ok(r)
+}
+
+#[tauri::command]
+fn cancel_mcp_sign_in() {
+    if let Some(job) = SIGN_IN.lock().unwrap().as_mut() {
+        job.cancelled = true;
+        let _ = job.child.kill();
+    }
+}
+
+/// Terminal output without colour codes, links and carriage returns.
+fn strip_ansi(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut chars = s.chars().peekable();
+    while let Some(c) = chars.next() {
+        match c {
+            '\u{1b}' => match chars.peek() {
+                Some('[') => {
+                    chars.next();
+                    while let Some(n) = chars.next() {
+                        if n.is_ascii_alphabetic() || n == '~' {
+                            break;
+                        }
+                    }
+                }
+                Some(']') => {
+                    // OSC (e.g. hyperlinks): up to BEL or ESC \
+                    chars.next();
+                    while let Some(n) = chars.next() {
+                        if n == '\u{7}' {
+                            break;
+                        }
+                        if n == '\u{1b}' {
+                            chars.next();
+                            break;
+                        }
+                    }
+                }
+                _ => {}
+            },
+            '\r' => {}
+            _ => out.push(c),
+        }
+    }
+    out
 }
 
 /// Moves a skill folder (or link) to the Trash. Only direct children of the skill folders are allowed.
@@ -1107,7 +1261,9 @@ pub fn run() {
             open_extension,
             restart_app,
             install_node,
-            install_uv
+            install_uv,
+            mcp_sign_in,
+            cancel_mcp_sign_in
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -1116,6 +1272,76 @@ pub fn run() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn sign_in_status_commands_are_allowed() {
+        let v = |a: &[&str]| a.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        assert!(allowed_invocation("claude", &v(&["mcp", "get", "apimodels"])));
+        assert!(allowed_invocation("claude", &v(&["mcp", "get", "plugin:stripe:stripe"])));
+        assert!(!allowed_invocation("claude", &v(&["mcp", "get", "--help"])));
+        assert!(!allowed_invocation("claude", &v(&["mcp", "login", "apimodels"])));
+        assert!(allowed_invocation("codex", &v(&["mcp", "list", "--json"])));
+        assert!(!allowed_invocation("codex", &v(&["mcp", "login", "apimodels"])));
+        assert!(!allowed_invocation("codex", &v(&["exec", "rm -rf ~"])));
+    }
+
+    /// The sign-in plumbing against local servers (no browser opens). Uses a throwaway Claude Code config:
+    /// CLAUDE_CONFIG_DIR=/tmp/x cargo test sign_in_real -- --ignored --nocapture
+    #[test]
+    #[ignore]
+    fn sign_in_real() {
+        use std::net::TcpListener;
+        assert!(std::env::var("CLAUDE_CONFIG_DIR").is_ok(), "set CLAUDE_CONFIG_DIR to a throwaway folder");
+        let add = |name: &str, port: u16| {
+            let url = format!("http://127.0.0.1:{port}/mcp");
+            let _ = Command::new("claude").args(["mcp", "remove", name, "-s", "user"]).output();
+            assert!(Command::new("claude").args(["mcp", "add", "--transport", "http", "-s", "user", name, &url]).status().unwrap().success());
+        };
+
+        // 1. a server that never answers: cancel after 6 s
+        let hang = TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = hang.local_addr().unwrap().port();
+        std::thread::spawn(move || {
+            let mut keep = vec![];
+            for s in hang.incoming() {
+                keep.push(s);
+            }
+        });
+        add("hang", port);
+        std::thread::spawn(|| {
+            std::thread::sleep(Duration::from_secs(6));
+            cancel_mcp_sign_in();
+        });
+        let t0 = Instant::now();
+        let r = sign_in_blocking("claude-code", "hang", None).unwrap();
+        println!("hang: found={} code={:?} cancelled={} timed_out={} after {:?}\n{}", r.found, r.code, r.cancelled, r.timed_out, t0.elapsed(), r.output);
+        assert!(r.found && r.cancelled && !r.timed_out);
+        assert!(t0.elapsed() < Duration::from_secs(15));
+        assert!(SIGN_IN.lock().unwrap().is_none());
+
+        // 2. a server that says 401 without any sign-in details: the CLI gives up by itself
+        let deny = TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = deny.local_addr().unwrap().port();
+        std::thread::spawn(move || {
+            for mut s in deny.incoming().flatten() {
+                let mut buf = [0u8; 4096];
+                let _ = s.read(&mut buf);
+                let _ = s.write_all(b"HTTP/1.1 401 Unauthorized\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+            }
+        });
+        add("deny", port);
+        let t0 = Instant::now();
+        let r = sign_in_blocking("claude-code", "deny", None).unwrap();
+        println!("deny: found={} code={:?} cancelled={} timed_out={} after {:?}\n{}", r.found, r.code, r.cancelled, r.timed_out, t0.elapsed(), r.output);
+        assert!(r.found && !r.cancelled && !r.timed_out);
+        assert!(!r.output.is_empty());
+    }
+
+    #[test]
+    fn strips_terminal_codes() {
+        let s = "Starting\r\n  \u{1b}]8;;https://a.example/x\u{7}link\u{1b}]8;;\u{7}\n\u{1b}[1mWaiting\u{1b}[0m";
+        assert_eq!(strip_ansi(s), "Starting\n  link\nWaiting");
+    }
 
     /// Real download into a throwaway HOME. Run with:
     /// CRADLER_DESKTOP_SKILL_SPEC=/path/spec.json CRADLER_DESKTOP_TEST_HOME=/tmp/x cargo test install_skill_real -- --ignored

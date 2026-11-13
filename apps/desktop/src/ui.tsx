@@ -12,7 +12,7 @@ import {
   type RepairKind,
 } from '@cradler-desktop/core';
 import { openExternal } from './clients';
-import { reveal } from './native';
+import { cancelSignIn, reveal } from './native';
 import { lookupRunner, previewRepair, runRepair } from './repairer';
 import { IconCheck, IconCheckCircle, IconCopy, IconKey, IconLock, IconPause, IconXCircle } from './icons';
 
@@ -187,7 +187,7 @@ function RepairPanel(props: { fix: Fix; servers: InstalledServer[]; onCancel: ()
 
   const input = { values, url, runner: runner && runner !== 'searching' ? runner : undefined };
   const places = listJoin(props.servers.map(placeLabel));
-  const changesConfig = !['install-node', 'install-uv'].includes(kind);
+  const changesConfig = !['install-node', 'install-uv', 'sign-in'].includes(kind);
 
   let preview: string | null = null;
   if (changesConfig && kind !== 'remove' && (kind !== 'use-runner' || input.runner)) {
@@ -254,6 +254,12 @@ function RepairPanel(props: { fix: Fix; servers: InstalledServer[]; onCancel: ()
       {kind === 'remove' && <div className="hint-line">{t('repair.removeWarn', { places })}</div>}
       {kind === 'install-node' && <div className="hint-line">{t('repair.nodeWarn')}</div>}
       {kind === 'install-uv' && <div className="hint-line">{t('repair.uvWarn')}</div>}
+      {kind === 'sign-in' && phase === 'edit' && <div className="hint-line">{t('repair.signInWarn')}</div>}
+      {kind === 'sign-in' && phase === 'working' && (
+        <div className="hint-line">
+          <span className="spinner spinner--muted" /> {t('repair.signInWaiting')}
+        </div>
+      )}
       {preview && (
         <div>
           <div className="field-label">{t('repair.preview')}</div>
@@ -268,7 +274,7 @@ function RepairPanel(props: { fix: Fix; servers: InstalledServer[]; onCancel: ()
       {phase !== 'edit' && phase !== 'working' && msg && <div className={`repair-msg ${phase === 'error' ? 'is-error' : ''}`}>{msg}</div>}
       {phase !== 'done' && (
         <div className="repair-actions">
-          <button className="btn-small" onClick={props.onCancel}>
+          <button className="btn-small" onClick={kind === 'sign-in' && phase === 'working' ? () => void cancelSignIn() : props.onCancel}>
             {t('common.cancel')}
           </button>
           <button className={`btn-small btn-small--ink ${kind === 'remove' ? 'is-danger' : ''}`} disabled={!ready} onClick={apply}>

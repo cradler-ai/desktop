@@ -1,6 +1,6 @@
 // Thin wrappers around the Rust commands (see src-tauri/src/lib.rs).
 import { invoke } from '@tauri-apps/api/core';
-import { t, type DirEntry, type InventoryIO, type ProbeResult } from '@cradler-desktop/core';
+import { t, type ClientId, type DirEntry, type InventoryIO, type ProbeResult } from '@cradler-desktop/core';
 import { inTauri } from './clients';
 
 export interface CaptureResult {
@@ -50,6 +50,47 @@ export const trashSkill = (path: string) => invoke<void>('trash_skill', { path }
 export const installNode = () => invoke<string>('install_node');
 
 export const installUv = () => invoke<string>('install_uv');
+
+export interface SignInResult {
+  found: boolean;
+  code: number | null;
+  timedOut: boolean;
+  cancelled: boolean;
+  output: string;
+}
+
+/** Signs in to an online server with the app's own CLI (it opens the browser and waits, up to 10 minutes). */
+export const signInMcp = (client: ClientId, name: string, cwd?: string) =>
+  invoke<SignInResult>('mcp_sign_in', { client, name, cwd: cwd ?? null });
+
+export const cancelSignIn = () => invoke<void>('cancel_mcp_sign_in');
+
+/**
+ * Whether the app itself holds a sign-in for this online server. Only the app has the token, so our own
+ * connection test gets "not authorized" either way. null = could not tell.
+ */
+export async function appSignedIn(client: ClientId, name: string, cwd?: string): Promise<boolean | null> {
+  if (client === 'claude-code') {
+    // "Status: ✔ Connected" / "Status: ! Needs authentication" / "Status: ✘ Failed to connect"
+    const r = await runCapture('claude', ['mcp', 'get', name], 30000, cwd);
+    const status = /Status:\s*(.+)/.exec(r.stdout)?.[1] ?? '';
+    if (/connected/i.test(status) && !/fail/i.test(status)) return true;
+    if (/auth/i.test(status)) return false;
+    return null;
+  }
+  if (client === 'codex') {
+    const r = await runCapture('codex', ['mcp', 'list', '--json'], 20000);
+    try {
+      const entry = (JSON.parse(r.stdout) as { name?: string; auth_status?: string }[]).find((e) => e.name === name);
+      const status = entry?.auth_status;
+      if (!status || status === 'unsupported') return null;
+      return status !== 'not_logged_in';
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
 
 export async function reveal(path: string): Promise<void> {
   const { revealItemInDir } = await import('@tauri-apps/plugin-opener');

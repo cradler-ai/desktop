@@ -147,6 +147,11 @@ registerMessages('zh', {
   'diag.badTokenDetail': '{unresolved}服务器拒绝了你填的密钥（{code}），需要换一个新的',
   'diag.login': '需要登录',
   'diag.loginDetail': '第一次在 {app} 里用到它时会弹出登录页，按提示授权就好',
+  'diag.loginApp': '点「登录」会打开浏览器，在网页上同意授权，{app} 就能用它了',
+  'diag.loginCursor': '打开 Cursor 的设置，在 MCP 那一页找到 {name}，按提示登录',
+  'diag.loginGemini': '在 Gemini CLI 里输入 /mcp auth {name}，按提示登录',
+  'diag.signedIn': '已登录',
+  'diag.signedInDetail': '{app} 已经登录过这个服务，可以直接用',
   'diag.wrongUrl': '地址不对',
   'diag.wrongUrlDetail': '这个网址上找不到服务，可能地址写错了或服务已经下线',
   'diag.useSse': '连接方式不对',
@@ -226,6 +231,7 @@ registerMessages('zh', {
   'repair.install-node': '安装 Node.js',
   'repair.install-uv': '安装 uv',
   'repair.remove': '删掉这条配置',
+  'repair.sign-in': '登录',
 });
 
 registerMessages('en', {
@@ -338,6 +344,11 @@ registerMessages('en', {
   'diag.badTokenDetail': '{unresolved}The server rejected your key ({code}); you need a new one',
   'diag.login': 'Sign-in needed',
   'diag.loginDetail': 'The first time {app} uses it, a sign-in page opens — just follow it',
+  'diag.loginApp': 'Click Sign in: your browser opens, approve access there and {app} can use it',
+  'diag.loginCursor': 'Open Cursor settings, find {name} on the MCP page and sign in from there',
+  'diag.loginGemini': 'In Gemini CLI, type /mcp auth {name} and follow the steps',
+  'diag.signedIn': 'Signed in',
+  'diag.signedInDetail': '{app} is signed in to this service and can use it',
   'diag.wrongUrl': 'Wrong address',
   'diag.wrongUrlDetail': 'No service at this address; it may be mistyped or the service is gone',
   'diag.useSse': 'Wrong connection type',
@@ -417,4 +428,5 @@ registerMessages('en', {
   'repair.install-node': 'Install Node.js',
   'repair.install-uv': 'Install uv',
   'repair.remove': 'Remove this entry',
+  'repair.sign-in': 'Sign in',
 });

@@ -1,7 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
 import {
+  cliServerName,
   diagnose,
   fingerprint,
+  needsSignInCheck,
   precheck,
   probeTimeoutMs,
   type Diagnosis,
@@ -11,7 +13,7 @@ import {
   type ProbeResult,
   t,
 } from '@cradler-desktop/core';
-import { probeHttp, probeStdio, runCapture } from './native';
+import { appSignedIn, probeHttp, probeStdio, runCapture } from './native';
 
 export interface EnvCheck {
   id: string;
@@ -32,6 +34,13 @@ async function probe(s: InstalledServer): Promise<ProbeResult> {
   const timeoutMs = probeTimeoutMs(s.raw);
   if (s.raw.url) return probeHttp({ url: s.raw.url, headers: s.raw.headers, transport: s.raw.transport ?? 'http', timeoutMs });
   return probeStdio({ command: s.raw.command ?? '', args: s.raw.args, env: s.raw.env, cwd: s.raw.cwd, timeoutMs });
+}
+
+/** Diagnosis for one place; online servers that sign in with OAuth ask the app whether it is signed in. */
+async function diagnoseServer(s: InstalledServer, r: ProbeResult): Promise<Diagnosis> {
+  if (!needsSignInCheck(s, r)) return diagnose(s, r);
+  const signedIn = await appSignedIn(s.client, cliServerName(s), s.projectDir).catch(() => null);
+  return diagnose(s, r, { signedIn });
 }
 
 async function mapLimit<T>(items: T[], limit: number, fn: (t: T) => Promise<void>): Promise<void> {
@@ -141,7 +150,7 @@ export function useHealth(): HealthState {
         r = { ok: false, error: 'spawn-failed', message: String(e), stderr: '', stdoutNoise: [], tools: [], authHeader: false, unresolvedVars: [], elapsedMs: 0 };
       }
       const add: Record<string, Diagnosis> = {};
-      for (const s of group) add[s.key] = diagnose(s, r);
+      for (const s of group) add[s.key] = await diagnoseServer(s, r);
       setResults((prev) => ({ ...prev, ...add }));
       done++;
       setProgress((p) => ({ ...p, done }));
@@ -159,7 +168,7 @@ export function useHealth(): HealthState {
     if (pre) d = pre;
     else {
       try {
-        d = diagnose(s, await probe(s));
+        d = await diagnoseServer(s, await probe(s));
       } catch (e) {
         d = { status: 'error', title: t('health.checkFailed'), detail: String(e), fixes: [] };
       }

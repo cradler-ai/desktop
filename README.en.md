@@ -21,6 +21,8 @@ Open-source skills and MCP servers are hard to install if you have never used a 
 - Paste a GitHub repository, an install command (`npx …`, `uvx …`, `claude mcp add …`), a JSON / TOML config or an install link. It detects the skills, MCP servers and plugins inside.
 - Keys and folders you need to provide are listed as simple fields.
 - Pick the apps to install into and click once. It tests the connection afterwards and offers a restart button for apps that need one.
+- Online services that need a sign-in (Notion, for example): in Claude Code and Codex, click Sign in and approve in your browser; for other apps it tells you where to sign in.
+- The Install page shows a short list of recommendations. Two of them, [apimodels](https://apimodels.app) and [Cradler](https://cradler.ai), are our own products and are labelled "Our product". Nothing is installed unless you click it.
 
 **Installed**
 
@@ -32,6 +34,7 @@ Open-source skills and MCP servers are hard to install if you have never used a 
 
 - Actually starts or connects to every MCP server and explains errors in plain words.
 - Fix buttons for what can be fixed: split a command that was written together with its arguments, fill in a key, switch to auto-download (npx / uvx), change the address, install Node.js or uv, remove a dead entry. You see the change first, confirm, it is written back and checked again.
+- For online services that sign in, it asks Claude Code / Codex whether they are signed in (they keep the sign-in themselves) and offers a Sign in button when they are not.
 - Checks the runtime (Node.js, uv, Python, Docker) and the syntax of config files.
 
 **Edit**
@@ -60,7 +63,7 @@ Installed and Health check read the configs of Claude Code, Claude Desktop, Curs
 - Every config write is backed up to `~/Library/Application Support/ai.cradler.desktop/backups/` and then replaced atomically. Only a fixed set of config files and existing skill files can be written.
 - Claude Code's config is changed through the official `claude mcp` commands.
 - Keys are masked in the interface.
-- No analytics. It only goes online to read a GitHub repository you pasted, download a skill you install, look up packages on npm / PyPI, connect to MCP servers you configured during a health check, and install Node.js or uv when you click that button.
+- No analytics. It only goes online to read a GitHub repository you pasted, download a skill you install, look up packages on npm / PyPI, connect to MCP servers you configured during a health check, and install Node.js or uv when you click that button. Signing in runs the app's own command (`claude mcp login` / `codex mcp login`); the sign-in stays in that app.
 
 ## Run from source
 

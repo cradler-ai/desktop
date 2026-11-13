@@ -1,6 +1,9 @@
 // Carries out a repair from the health check. Files are backed up by Rust before writing;
 // Claude Code configs go through its own CLI (with ~/.claude.json copied aside first).
 import {
+  SIGN_IN_CLIENTS,
+  cliServerName,
+  clientLabel,
   findRunner,
   planRepairWrite,
   repairedRaw,
@@ -11,8 +14,9 @@ import {
   type RepairField,
   type RepairInput,
   type RepairKind,
+  type ClientId,
 } from '@cradler-desktop/core';
-import { backupClaudeJson, installNode, installUv, nativeError, nativeIO, runCapture, writeConfig } from './native';
+import { backupClaudeJson, installNode, installUv, nativeError, nativeIO, runCapture, signInMcp, writeConfig } from './native';
 
 const browserFetch: FetchLike = (u, i) => globalThis.fetch(u, i);
 
@@ -33,6 +37,7 @@ export interface RepairResult {
 export async function runRepair(servers: InstalledServer[], kind: RepairKind, input: RepairInput, fields: RepairField[]): Promise<RepairResult> {
   try {
     if (kind === 'install-node') return { ok: true, message: t('repair.nodeOpened', { v: await installNode() }) };
+    if (kind === 'sign-in') return await signIn(servers);
     if (kind === 'install-uv') {
       await installUv();
       return { ok: true, message: t('repair.uvDone') };
@@ -42,6 +47,39 @@ export async function runRepair(servers: InstalledServer[], kind: RepairKind, in
   } catch (e) {
     return { ok: false, message: t('repair.failed', { msg: nativeError(e) }) };
   }
+}
+
+/** Signs in to one online server with the app's own CLI; it opens the browser and waits for the user. */
+export async function signInOnce(client: ClientId, name: string, cwd?: string): Promise<RepairResult> {
+  try {
+    const r = await signInMcp(client, name, cwd);
+    if (!r.found) return { ok: false, message: t('repair.signInNoCli', { app: clientLabel(client) }) };
+    if (r.cancelled) return { ok: false, message: t('repair.signInCancelled') };
+    if (r.timedOut) return { ok: false, message: t('repair.signInTimeout') };
+    if (r.code !== 0 && r.code !== null) {
+      const last = r.output.split('\n').map((l) => l.trim()).filter(Boolean).pop() ?? '';
+      return { ok: false, message: t('repair.signInFailed', { msg: last || String(r.code) }) };
+    }
+    return { ok: true, message: t('repair.signInDone') };
+  } catch (e) {
+    return { ok: false, message: t('repair.signInFailed', { msg: nativeError(e) }) };
+  }
+}
+
+/** One app after the other (each opens the browser once). */
+async function signIn(servers: InstalledServer[]): Promise<RepairResult> {
+  const seen = new Set<string>();
+  let last: RepairResult = { ok: true, message: t('repair.signInDone') };
+  for (const s of servers) {
+    if (!SIGN_IN_CLIENTS.includes(s.client)) continue;
+    const name = cliServerName(s);
+    const id = `${s.client}|${name}|${s.projectDir ?? ''}`;
+    if (seen.has(id)) continue;
+    seen.add(id);
+    last = await signInOnce(s.client, name, s.projectDir);
+    if (!last.ok) return last;
+  }
+  return last;
 }
 
 /**

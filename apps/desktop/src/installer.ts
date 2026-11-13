@@ -31,6 +31,8 @@ export interface TargetResult {
   message: string;
   restart?: string;
   copyText?: string;
+  /** MCP installs: the name the server was saved under in this app. */
+  serverName?: string;
 }
 
 export interface InstallOutcome {
@@ -87,7 +89,8 @@ export async function install(c: Candidate, targets: ClientId[], values: Record<
           await writeConfig(step.path, next.text);
         }
         const note = afterInstallNote(client);
-        results.push({ client, status: 'ok', message: t(replaced ? 'inst.updated' : 'inst.ok', { note: note.text }), restart: note.restart });
+        const serverName = step.kind === 'cli' ? step.args[2] : step.name;
+        results.push({ client, status: 'ok', message: t(replaced ? 'inst.updated' : 'inst.ok', { note: note.text }), restart: note.restart, serverName });
       } catch (e) {
         results.push({ client, status: 'error', message: nativeError(e) });
       }

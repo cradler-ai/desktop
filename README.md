@@ -21,6 +21,8 @@ Cradler Desktop 是 [Cradler](https://cradler.ai) 的开源桌面应用，免费
 - 粘贴 GitHub 仓库地址、安装命令（`npx …`、`uvx …`、`claude mcp add …`）、JSON / TOML 配置或安装链接，自动识别里面有哪些 skill、MCP 和插件。
 - 需要你提供的密钥、文件夹会单独列出来让你填。
 - 勾选要装进哪些应用，一键写入；装完自动测一次能不能连上，需要重启的应用直接给重启按钮。
+- 需要登录的在线服务（比如 Notion）：在 Claude Code 和 Codex 里点「登录」就会打开浏览器授权，其他应用会告诉你去哪里登录。
+- 安装页有一份推荐列表。其中 [apimodels](https://apimodels.app) 和 [Cradler](https://cradler.ai) 是我们自己的产品，卡片上标着「我们的产品」；只有你点了才会安装，不会预装任何东西。
 
 **已安装**
 
@@ -32,6 +34,7 @@ Cradler Desktop 是 [Cradler](https://cradler.ai) 的开源桌面应用，免费
 
 - 逐个真正启动或连接每个 MCP，把报错翻译成大白话。
 - 能修的直接给修复按钮：拆开写在一起的命令和参数、填写密钥、改成自动下载运行（npx / uvx）、修改地址、安装 Node.js 或 uv、删除失效的配置。先预览要改什么，确认后写回原处，再自动重新检查。
+- 需要登录的在线服务，直接问 Claude Code / Codex 它们自己有没有登录（登录信息存在这些应用里），没登录的给「登录」按钮。
 - 检查运行环境（Node.js、uv、Python、Docker）和配置文件的格式。
 
 **编辑**
@@ -60,7 +63,7 @@ Cradler Desktop 是 [Cradler](https://cradler.ai) 的开源桌面应用，免费
 - 写配置之前先备份到 `~/Library/Application Support/ai.cradler.desktop/backups/`，再整体替换；只允许写固定的几份配置文件和已有的技能文件。
 - Claude Code 的配置通过官方的 `claude mcp` 命令修改，不直接改它的文件。
 - 密钥在界面上默认打码。
-- 没有任何统计上报。只有这些时候会联网：读取你粘贴的 GitHub 仓库、下载要装的 skill、去 npm / PyPI 查询包是否存在、体检时连接你自己配置的 MCP 服务、你点了安装 Node.js 或 uv。
+- 没有任何统计上报。只有这些时候会联网：读取你粘贴的 GitHub 仓库、下载要装的 skill、去 npm / PyPI 查询包是否存在、体检时连接你自己配置的 MCP 服务、你点了安装 Node.js 或 uv。登录在线服务时运行的是那个应用自己的命令（`claude mcp login` / `codex mcp login`），登录信息留在那个应用里。
 
 ## 从源码运行
 

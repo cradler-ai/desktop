@@ -1,7 +1,7 @@
 // Turns a raw probe result into something an ordinary person can act on — including a repair
 // the app can carry out (see repair.ts), not just an explanation.
 import type { InstalledServer, RawServerConfig } from './inventory';
-import { clientLabel } from './targets';
+import { clientLabel, type ClientId } from './targets';
 import { commandBase, analyzeCommand } from './util/command';
 import { isPlaceholder, looksSecret } from './util/placeholder';
 import { t } from './i18n';
@@ -26,7 +26,43 @@ export interface ProbeResult {
 
 export type HealthStatus = 'ok' | 'error' | 'auth' | 'skipped';
 
-export type RepairKind = 'split-command' | 'use-runner' | 'set-values' | 'edit-url' | 'install-node' | 'install-uv' | 'remove';
+export type RepairKind = 'split-command' | 'use-runner' | 'set-values' | 'edit-url' | 'install-node' | 'install-uv' | 'remove' | 'sign-in';
+
+/** Apps whose official CLI can sign in to an online server (`claude mcp login`, `codex mcp login`). */
+export const SIGN_IN_CLIENTS: ClientId[] = ['claude-code', 'codex'];
+
+/** The name the app's own CLI knows the server by (plugin servers are "plugin:<plugin>:<server>" in Claude Code). */
+export function cliServerName(s: Pick<InstalledServer, 'name' | 'scope' | 'scopeLabel' | 'client'>): string {
+  return s.client === 'claude-code' && s.scope === 'plugin' && s.scopeLabel ? `plugin:${s.scopeLabel}:${s.name}` : s.name;
+}
+
+/**
+ * The server answered "not authorized" and has no key in its config: it signs in with OAuth, and the
+ * app keeps the sign-in itself, out of our reach. Ask the app (see SIGN_IN_CLIENTS) whether it is signed in.
+ */
+export function needsSignInCheck(s: InstalledServer, r: ProbeResult): boolean {
+  return (
+    !!s.raw.url &&
+    SIGN_IN_CLIENTS.includes(s.client) &&
+    r.error === 'http-status' &&
+    (r.httpStatus === 401 || r.httpStatus === 403) &&
+    secretFields(s.raw).length === 0
+  );
+}
+
+/** How to sign in to an online server in this app. */
+export function signInHint(client: ClientId, name: string): string {
+  if (SIGN_IN_CLIENTS.includes(client)) return t('diag.loginApp', { app: clientLabel(client) });
+  if (client === 'cursor') return t('diag.loginCursor', { name });
+  if (client === 'gemini') return t('diag.loginGemini', { name });
+  return t('diag.loginDetail', { app: clientLabel(client) });
+}
+
+/** Extra facts gathered outside the probe. */
+export interface DiagnoseContext {
+  /** From the app's CLI: whether it holds a sign-in for this server (null = could not tell). */
+  signedIn?: boolean | null;
+}
 
 /** A value the user types in during a repair (an API key, a token...). */
 export interface RepairField {
@@ -154,11 +190,11 @@ function finish(s: InstalledServer, d: Diagnosis): Diagnosis {
   if (s.scope !== 'plugin' && s.scope !== 'extension') return d;
   return {
     ...d,
-    fixes: d.fixes.filter((f) => f.kind === 'open-url' || f.kind === 'retry' || f.repair === 'install-node' || f.repair === 'install-uv'),
+    fixes: d.fixes.filter((f) => f.kind === 'open-url' || f.kind === 'retry' || f.repair === 'install-node' || f.repair === 'install-uv' || f.repair === 'sign-in'),
   };
 }
 
-export function diagnose(s: InstalledServer, r: ProbeResult): Diagnosis {
+export function diagnose(s: InstalledServer, r: ProbeResult, ctx: DiagnoseContext = {}): Diagnosis {
   const raw = s.raw;
   const out = (x: Omit<Diagnosis, 'raw' | 'elapsedMs'>): Diagnosis =>
     finish(s, {
@@ -204,7 +240,14 @@ export function diagnose(s: InstalledServer, r: ProbeResult): Diagnosis {
               detail: t('diag.badTokenDetail', { unresolved, code }),
               fixes: [repair('set-values', { primary: true, fields }), ...reveal(s), retry()],
             })
-          : out({ status: 'auth', title: t('diag.login'), detail: t('diag.loginDetail', { app: clientLabel(s.client) }), fixes: [retry()] });
+          : ctx.signedIn
+            ? out({ status: 'ok', title: t('diag.signedIn'), detail: t('diag.signedInDetail', { app: clientLabel(s.client) }), fixes: [] })
+            : out({
+                status: 'auth',
+                title: t('diag.login'),
+                detail: signInHint(s.client, s.name),
+                fixes: SIGN_IN_CLIENTS.includes(s.client) ? [repair('sign-in', { primary: true }), retry()] : [retry()],
+              });
       }
       if (code === 404) return out({ status: 'error', title: t('diag.wrongUrl'), detail: t('diag.wrongUrlDetail'), fixes: [editUrl, removeFix, retry()] });
       if (code === 405 && raw.transport === 'http')
